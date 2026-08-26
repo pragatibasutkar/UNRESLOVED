@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNRESOLVED | Student Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --glass-bg: rgba(18, 24, 38, 0.8);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent-blue: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 18px;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      margin: 0;
+      padding: 30px 20px;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .glow-orb {
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: -1;
+      opacity: 0.35;
+    }
+    .orb-1 { background: var(--accent-blue); top: -80px; left: -80px; }
+    .orb-2 { background: var(--accent-pink); bottom: -80px; right: -80px; }
+
+    .grid-2-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* LOGIN SCREEN */
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 85vh;
+    }
+
+    .auth-card {
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .auth-brand { justify-content: center; margin-bottom: 16px; }
+    .auth-card h2 { margin: 0 0 6px 0; font-size: 22px; }
+    .auth-card p { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
+
+    .demo-hint-box {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px dashed var(--accent-blue);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .demo-hint-box code { color: var(--accent-cyan); font-weight: bold; }
+
+    /* SESSION BANNER */
+    .logged-in-banner {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .banner-title { display: block; font-size: 11px; color: var(--text-muted); }
+    .banner-user { font-weight: 700; color: var(--accent-cyan); font-size: 13px; }
+
+    /* MAIN PORTAL LAYOUT */
+    .portal-container { max-width: 650px; margin: 0 auto; }
+
+    .glass-nav {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      padding: 10px 18px;
+      border-radius: 99px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+    .brand .dot { color: var(--accent-cyan); }
+
+    .nav-pills { display: flex; gap: 4px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 99px; }
+    .pill-btn {
+      background: none; border: none; color: var(--text-muted);
+      padding: 8px 14px; border-radius: 99px; font-weight: 600; font-size: 12px;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .pill-btn.active { background: var(--accent-blue); color: #fff; }
+
+    .hero-header { text-align: center; margin-bottom: 24px; }
+    .hero-header h1 { font-size: 28px; font-weight: 800; margin: 0 0 6px 0; }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-header p { color: var(--text-muted); font-size: 13px; margin: 0; }
+
+    .status-pill {
+      display: inline-block; font-size: 11px; font-weight: 700; color: #10b981;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 3px 10px; border-radius: 99px; margin-bottom: 8px;
+    }
+    .status-pill.warning { color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); }
+
+    .glass-card {
+      background: var(--glass-bg); backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); border-radius: var(--radius);
+      padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .section-label { display: block; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; text-align: left; }
+    .form-group { margin-bottom: 20px; text-align: left; }
+
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .cat-card input { display: none; }
+    .card-inner {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    }
+    .cat-card input:checked + .card-inner { border-color: var(--accent-cyan); background: rgba(6, 182, 212, 0.1); }
+
+    .neon-input {
+      width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 12px; color: #fff; font-family: inherit; font-size: 13px;
+      box-sizing: border-box; outline: none;
+    }
+    .neon-input:focus { border-color: var(--accent-blue); }
+    select.neon-input option { background: var(--bg-dark); color: #fff; }
+
+    .toggle-row { display: flex; flex-direction: column; gap: 8px; }
+    .anon-box {
+      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border);
+      padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+    }
+    .toggle-text { font-size: 12px; color: var(--text-main); font-weight: 500; }
+
+    .glow-button {
+      width: 100%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border: none; color: white; padding: 14px; border-radius: 10px; font-weight: 700;
+      font-size: 14px; cursor: pointer; transition: transform 0.2s ease;
+    }
+    .glow-button:hover { transform: translateY(-2px); }
+
+    /* PROFILE SECTION */
+    .profile-header-card { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--glass-border); margin-bottom: 16px; }
+    .avatar-circle {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+    }
+    .user-info { flex: 1; text-align: left; }
+    .user-info h3 { margin: 0; font-size: 15px; }
+    .user-info p { margin: 2px 0 0 0; font-size: 11px; color: var(--text-muted); }
+
+    .logout-btn {
+      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-box { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; text-align: center; }
+    .stat-number { font-size: 20px; font-weight: 800; color: var(--accent-cyan); display: block; }
+    .stat-label { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+
+    /* TICKET FEED */
+    .feed-item { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 14px; border-radius: 10px; margin-bottom: 10px; text-align: left; }
+    .feed-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .feed-id { font-family: monospace; font-size: 12px; font-weight: 700; color: var(--accent-cyan); }
+    .status-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+    .status-badge.unresolved { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .status-badge.resolved { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .feed-title { font-weight: 600; font-size: 13px; margin: 0 0 4px 0; }
+    .feed-meta { font-size: 11px; color: var(--text-muted); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+
+  <!-- SCREEN 1: LOGIN MODAL -->
+  <div id="loginScreen" class="auth-wrapper">
+    <div class="glass-card auth-card">
+      <div class="brand auth-brand">
+        <span class="brand-icon">⚡</span>
+        UNRESOLVED<span class="dot">.</span>
+      </div>
+      <h2>Student Login</h2>
+      <p>Enter your details below to access the complaint portal.</p>
+
+      <div class="demo-hint-box">
+        💡 <strong>Instant Access:</strong> Fill in any Class, Section, Roll No., & Date of Birth to enter the portal instantly.
+      </div>
+
+      <form id="loginForm">
+        <div class="grid-2-col">
+          <div class="form-group">
+            <label for="loginStandard" class="section-label">CLASS / STANDARD *</label>
+            <select id="loginStandard" class="neon-input" required>
+              <option value="" disabled selected>Select Class</option>
+              <option value="Class 8">Class 8</option>
+              <option value="Class 9">Class 9</option>
+              <option value="Class 10">Class 10</option>
+              <option value="Class 11">Class 11</option>
+              <option value="Class 12">Class 12</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="loginSection" class="section-label">SECTION / DIV *</label>
+            <select id="loginSection" class="neon-input" required>
+              <option value="" disabled selected>Select Sec</option>
+              <option value="Sec A">Section A</option>
+              <option value="Sec B">Section B</option>
+              <option value="Sec C">Section C</option>
+              <option value="Sec D">Section D</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginRollNo" class="section-label">ROLL NO. / STUDENT ID *</label>
+          <input type="text" id="loginRollNo" class="neon-input" placeholder="e.g., ST-8042" required>
+        </div>
+
+        <div class="form-group">
+          <label for="loginDob" class="section-label">DATE OF BIRTH *</label>
+          <input type="date" id="loginDob" class="neon-input" required>
+        </div>
+
+        <button type="submit" class="glow-button">Verify & Enter Portal</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: MAIN APPLICATION PORTAL -->
+  <div id="portalApp" class="portal-container hidden">
+    <nav class="glass-nav">
+      <div class="brand">
+        <span class="brand-icon">⚡</span>
+        UNRESOLVED<span class="dot">.</span>
+      </div>
+      <div class="nav-pills">
+        <button class="pill-btn active" id="btnSubmit" onclick="switchTab('submitTab')">File Issue</button>
+        <button class="pill-btn" id="btnPublic" onclick="switchTab('publicTab')">🌐 Public Board</button>
+        <button class="pill-btn" id="btnPersonal" onclick="switchTab('personalTab')">👤 My Details</button>
+      </div>
+    </nav>
+
+    <!-- TAB 1: FILE COMPLAINT -->
+    <main id="submitTab" class="tab-content">
+      <header class="hero-header">
+        <div class="status-pill">● Session Active</div>
+        <h1>Make Your Voice <span class="gradient-text">Unstoppable</span></h1>
+        <p>File a report with school administration. Select privacy options below.</p>
+      </header>
+
+      <div class="glass-card">
+        <form id="complaintForm">
+          <div class="logged-in-banner">
+            <span class="user-badge-icon">👤</span>
+            <div>
+              <span class="banner-title">Submitting as Logged-in Student:</span>
+              <span id="activeUserLabel" class="banner-user">Class 10 (Sec A) | Roll No: ST-8042</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="section-label">1. SELECT CATEGORY</label>
+            <div class="category-grid">
+              <label class="cat-card">
+                <input type="radio" name="category" value="Faculty" checked>
+                <div class="card-inner"><span class="cat-icon">🎓</span><span class="cat-name">Faculty</span></div>
+              </label>
+              <label class="cat-card">
+                <input type="radio" name="category" value="Facilities">
+                <div class="card-inner"><span class="cat-icon">🏫</span><span class="cat-name">Facilities</span></div>
+              </label>
+              <label class="cat-card">
+                <input type="radio" name="category" value="Academics">
+                <div class="card-inner"><span class="cat-icon">📚</span><span class="cat-name">Academics</span></div>
+              </label>
+              <label class="cat-card">
+                <input type="radio" name="category" value="Safety">
+                <div class="card-inner"><span class="cat-icon">🛡️</span><span class="cat-name">Safety</span></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="subject" class="section-label">2. ISSUE SUBJECT</label>
+            <input type="text" id="subject" class="neon-input" placeholder="Summarize the concern..." required>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="section-label">3. DETAILED EXPLANATION</label>
+            <textarea id="description" class="neon-input" rows="3" placeholder="Provide complete details (locations, times, specific incidents)..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="section-label">4. PRIVACY OPTIONS</label>
+            <div class="toggle-row">
+              <label class="anon-box">
+                <input type="checkbox" id="anonToggle">
+                <span class="toggle-text">Submit Anonymously (Hide Roll No from report)</span>
+              </label>
+              <label class="anon-box">
+                <input type="checkbox" id="publicToggle" checked>
+                <span class="toggle-text">Show on Public Board</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="glow-button">Dispatch Report</button>
+        </form>
+      </div>
+    </main>
+
+    <!-- TAB 2: PUBLIC BOARD -->
+    <main id="publicTab" class="tab-content hidden">
+      <header class="hero-header">
+        <div class="status-pill warning">● Live Feed</div>
+        <h1>Public Campus <span class="gradient-text">Board</span></h1>
+        <p>Live visibility feed for student issues across campus.</p>
+      </header>
+
+      <div class="glass-card">
+        <div class="ticket-feed" id="publicFeedContainer"></div>
+      </div>
+    </main>
+
+    <!-- TAB 3: MY DETAILS -->
+    <main id="personalTab" class="tab-content hidden">
+      <header class="hero-header">
+        <div class="status-pill">● Verified Account</div>
+        <h1>Student Details & <span class="gradient-text">History</span></h1>
+        <p>Your official details and direct ticket status tracking.</p>
+      </header>
+
+      <div class="glass-card">
+        <div class="profile-header-card">
+          <div class="avatar-circle" id="userAvatar">RN</div>
+          <div class="user-info">
+            <h3 id="displayRollNo">Roll No: ST-8042</h3>
+            <p id="displayClassSection">Class: Class 10 - Sec A</p>
+            <p id="displayDob">DOB: Verified</p>
+          </div>
+          <button class="logout-btn" onclick="logoutStudent()">Sign Out</button>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="stat-number" id="totalSubmitted">0</span>
+            <span class="stat-label">Filed Reports</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number" id="totalResolved">0</span>
+            <span class="stat-label">Resolved</span>
+          </div>
+        </div>
+
+        <label class="section-label">MY SUBMITTED REPORTS</label>
+        <div class="ticket-feed" id="personalFeedContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let authenticatedStudent = null;
+
+    const complaintStore = [
+      {
+        id: "UNR-1092",
+        rollNo: "ST-8042",
+        category: "Facilities",
+        subject: "Water cooler leak near Room 204",
+        isAnon: false,
+        isPublic: true,
+        status: "Unresolved",
+        timestamp: "15m ago"
+      }
+    ];
+
+    // 1. LOGIN SYSTEM
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const standard = document.getElementById('loginStandard').value;
+      const section = document.getElementById('loginSection').value;
+      const rollNo = document.getElementById('loginRollNo').value.trim().toUpperCase();
+      const dob = document.getElementById('loginDob').value;
+
+      if (!standard || !section || !rollNo || !dob) {
+        alert("Please complete all details!");
+        return;
+      }
+
+      authenticatedStudent = { standard, section, rollNo, dob };
+
+      document.getElementById('activeUserLabel').innerText = `${standard} (${section}) | Roll No: ${rollNo}`;
+      document.getElementById('displayRollNo').innerText = `Roll No: ${rollNo}`;
+      document.getElementById('displayClassSection').innerText = `Class: ${standard} - ${section}`;
+      document.getElementById('displayDob').innerText = `DOB: ${dob}`;
+      document.getElementById('userAvatar').innerText = rollNo.substring(0, 2);
+
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('portalApp').classList.remove('hidden');
+    });
+
+    // 2. LOGOUT SYSTEM
+    function logoutStudent() {
+      authenticatedStudent = null;
+      document.getElementById('loginForm').reset();
+      document.getElementById('portalApp').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    // 3. SUBMIT TICKET
+    document.getElementById('complaintForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const isAnon = document.getElementById('anonToggle').checked;
+      const isPublic = document.getElementById('publicToggle').checked;
+
+      const newTicket = {
+        id: "UNR-" + Math.floor(1000 + Math.random() * 9000),
+        rollNo: authenticatedStudent.rollNo,
+        category: document.querySelector('input[name="category"]:checked').value,
+        subject: document.getElementById('subject').value,
+        isAnon: isAnon,
+        isPublic: isPublic,
+        status: "Unresolved",
+        timestamp: "Just now"
+      };
+
+      complaintStore.unshift(newTicket);
+      document.getElementById('complaintForm').reset();
+      
+      if (isPublic) {
+        switchTab('publicTab');
+      } else {
+        switchTab('personalTab');
+      }
+    });
+
+    // 4. TAB NAVIGATION & RENDER
+    function renderPublicFeed() {
+      const container = document.getElementById('publicFeedContainer');
+      container.innerHTML = '';
+      
+      const publicTickets = complaintStore.filter(t => t.isPublic);
+      
+      if (publicTickets.length === 0) {
+        container.innerHTML = '<p class="feed-meta">No public tickets listed yet.</p>';
+        return;
+      }
+
+      publicTickets.forEach(t => {
+        container.innerHTML += `
+          <div class="feed-item">
+            <div class="feed-top">
+              <span class="feed-id">${t.id}</span>
+              <span class="status-badge ${t.status.toLowerCase()}">${t.status}</span>
+            </div>
+            <div class="feed-title">${t.subject}</div>
+            <div class="feed-meta">Category: ${t.category} • Posted by: ${t.isAnon ? 'Anonymous' : t.rollNo} • ${t.timestamp}</div>
+          </div>
+        `;
+      });
+    }
+
+    function renderPersonalPortal() {
+      const container = document.getElementById('personalFeedContainer');
+      container.innerHTML = '';
+      
+      const myTickets = complaintStore.filter(t => t.rollNo === authenticatedStudent.rollNo);
+      
+      document.getElementById('totalSubmitted').innerText = myTickets.length;
+      document.getElementById('totalResolved').innerText = myTickets.filter(t => t.status === 'Resolved').length;
+
+      if (myTickets.length === 0) {
+        container.innerHTML = '<p class="feed-meta">You have not submitted any complaints yet.</p>';
+        return;
+      }
+
+      myTickets.forEach(t => {
+        container.innerHTML += `
+          <div class="feed-item">
+            <div class="feed-top">
+              <span class="feed-id">${t.id}</span>
+              <span class="status-badge ${t.status.toLowerCase()}">${t.status}</span>
+            </div>
+            <div class="feed-title">${t.subject}</div>
+            <div class="feed-meta">Visibility: ${t.isPublic ? 'Public Board' : 'Private Direct'} • Mode: ${t.isAnon ? 'Anonymous' : 'Identified'} • ${t.timestamp}</div>
+          </div>
+        `;
+      });
+    }
+
+    function switchTab(tabId) {
+      document.getElementById('submitTab').classList.add('hidden');
+      document.getElementById('publicTab').classList.add('hidden');
+      document.getElementById('personalTab').classList.add('hidden');
+
+      document.getElementById('btnSubmit').classList.remove('active');
+      document.getElementById('btnPublic').classList.remove('active');
+      document.getElementById('btnPersonal').classList.remove('active');
+
+      document.getElementById(tabId).classList.remove('hidden');
+
+      if (tabId === 'publicTab') {
+        document.getElementById('btnPublic').classList.add('active');
+        renderPublicFeed();
+      } else if (tabId === 'personalTab') {
+        document.getElementById('btnPersonal').classList.add('active');
+        renderPersonalPortal();
+      } else {
+        document.getElementById('btnSubmit').classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
