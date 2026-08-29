@@ -56,7 +56,7 @@
     }
 
     .auth-card {
-      max-width: 440px;
+      max-width: 460px;
       width: 100%;
       text-align: center;
     }
@@ -209,7 +209,6 @@
   <div class="glow-orb orb-1"></div>
   <div class="glow-orb orb-2"></div>
 
-  <!-- SCREEN 1: LOGIN MODAL -->
   <div id="loginScreen" class="auth-wrapper">
     <div class="glass-card auth-card">
       <div class="brand auth-brand">
@@ -220,20 +219,26 @@
       <p>Enter your details below to access the complaint portal.</p>
 
       <div class="demo-hint-box">
-        💡 <strong>Instant Access:</strong> Fill in any Class, Section, Roll No., & Date of Birth to enter the portal instantly.
+        💡 <strong>Instant Access:</strong> Fill in any Class/Degree, Section, Roll No., & Date of Birth to enter the portal instantly.
       </div>
 
       <form id="loginForm">
         <div class="grid-2-col">
           <div class="form-group">
-            <label for="loginStandard" class="section-label">CLASS / STANDARD *</label>
+            <label for="loginStandard" class="section-label">CLASS / DEGREE *</label>
             <select id="loginStandard" class="neon-input" required>
-              <option value="" disabled selected>Select Class</option>
+              <option value="" disabled selected>Select Level</option>
               <option value="Class 8">Class 8</option>
               <option value="Class 9">Class 9</option>
               <option value="Class 10">Class 10</option>
               <option value="Class 11">Class 11</option>
               <option value="Class 12">Class 12</option>
+              <option value="UG - 1st Year">UG - 1st Year</option>
+              <option value="UG - 2nd Year">UG - 2nd Year</option>
+              <option value="UG - 3rd Year">UG - 3rd Year</option>
+              <option value="UG - 4th Year">UG - 4th Year</option>
+              <option value="PG - 1st Year">PG - 1st Year</option>
+              <option value="PG - 2nd Year">PG - 2nd Year</option>
             </select>
           </div>
 
@@ -264,7 +269,6 @@
     </div>
   </div>
 
-  <!-- SCREEN 2: MAIN APPLICATION PORTAL -->
   <div id="portalApp" class="portal-container hidden">
     <nav class="glass-nav">
       <div class="brand">
@@ -278,7 +282,6 @@
       </div>
     </nav>
 
-    <!-- TAB 1: FILE COMPLAINT -->
     <main id="submitTab" class="tab-content">
       <header class="hero-header">
         <div class="status-pill">● Session Active</div>
@@ -292,7 +295,7 @@
             <span class="user-badge-icon">👤</span>
             <div>
               <span class="banner-title">Submitting as Logged-in Student:</span>
-              <span id="activeUserLabel" class="banner-user">Class 10 (Sec A) | Roll No: ST-8042</span>
+              <span id="activeUserLabel" class="banner-user">PG - 1st Year (Sec A) | Roll No: ST-8042</span>
             </div>
           </div>
 
@@ -347,7 +350,6 @@
       </div>
     </main>
 
-    <!-- TAB 2: PUBLIC BOARD -->
     <main id="publicTab" class="tab-content hidden">
       <header class="hero-header">
         <div class="status-pill warning">● Live Feed</div>
@@ -360,7 +362,6 @@
       </div>
     </main>
 
-    <!-- TAB 3: MY DETAILS -->
     <main id="personalTab" class="tab-content hidden">
       <header class="hero-header">
         <div class="status-pill">● Verified Account</div>
@@ -373,7 +374,7 @@
           <div class="avatar-circle" id="userAvatar">RN</div>
           <div class="user-info">
             <h3 id="displayRollNo">Roll No: ST-8042</h3>
-            <p id="displayClassSection">Class: Class 10 - Sec A</p>
+            <p id="displayClassSection">Class: PG - 1st Year - Sec A</p>
             <p id="displayDob">DOB: Verified</p>
           </div>
           <button class="logout-btn" onclick="logoutStudent()">Sign Out</button>
@@ -430,7 +431,7 @@
 
       document.getElementById('activeUserLabel').innerText = `${standard} (${section}) | Roll No: ${rollNo}`;
       document.getElementById('displayRollNo').innerText = `Roll No: ${rollNo}`;
-      document.getElementById('displayClassSection').innerText = `Class: ${standard} - ${section}`;
+      document.getElementById('displayClassSection').innerText = `Level: ${standard} - ${section}`;
       document.getElementById('displayDob').innerText = `DOB: ${dob}`;
       document.getElementById('userAvatar').innerText = rollNo.substring(0, 2);
 
