@@ -75,7 +75,6 @@
       margin-bottom: 20px;
       text-align: left;
     }
-    .demo-hint-box code { color: var(--accent-cyan); font-weight: bold; }
 
     /* SESSION BANNER */
     .logged-in-banner {
@@ -209,6 +208,7 @@
   <div class="glow-orb orb-1"></div>
   <div class="glow-orb orb-2"></div>
 
+  <!-- SCREEN 1: LOGIN MODAL -->
   <div id="loginScreen" class="auth-wrapper">
     <div class="glass-card auth-card">
       <div class="brand auth-brand">
@@ -269,6 +269,7 @@
     </div>
   </div>
 
+  <!-- SCREEN 2: MAIN APPLICATION PORTAL -->
   <div id="portalApp" class="portal-container hidden">
     <nav class="glass-nav">
       <div class="brand">
@@ -282,6 +283,7 @@
       </div>
     </nav>
 
+    <!-- TAB 1: FILE COMPLAINT -->
     <main id="submitTab" class="tab-content">
       <header class="hero-header">
         <div class="status-pill">● Session Active</div>
@@ -350,6 +352,7 @@
       </div>
     </main>
 
+    <!-- TAB 2: PUBLIC BOARD -->
     <main id="publicTab" class="tab-content hidden">
       <header class="hero-header">
         <div class="status-pill warning">● Live Feed</div>
@@ -362,6 +365,7 @@
       </div>
     </main>
 
+    <!-- TAB 3: MY DETAILS -->
     <main id="personalTab" class="tab-content hidden">
       <header class="hero-header">
         <div class="status-pill">● Verified Account</div>
@@ -398,9 +402,13 @@
   </div>
 
   <script>
+    // Paste Google Apps Script Web App URL here
+    const GOOGLE_SHEET_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+
     let authenticatedStudent = null;
 
-    const complaintStore = [
+    // Load complaints from LocalStorage (Fallback / Immediate Persistence)
+    let complaintStore = JSON.parse(localStorage.getItem('unresolved_complaints')) || [
       {
         id: "UNR-1092",
         rollNo: "ST-8042",
@@ -412,6 +420,10 @@
         timestamp: "15m ago"
       }
     ];
+
+    function saveToLocalStorage() {
+      localStorage.setItem('unresolved_complaints', JSON.stringify(complaintStore));
+    }
 
     // 1. LOGIN SYSTEM
     document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -447,7 +459,7 @@
       document.getElementById('loginScreen').classList.remove('hidden');
     }
 
-    // 3. SUBMIT TICKET
+    // 3. SUBMIT TICKET WITH GOOGLE SHEETS & LOCAL STORAGE BACKUP
     document.getElementById('complaintForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -456,16 +468,32 @@
 
       const newTicket = {
         id: "UNR-" + Math.floor(1000 + Math.random() * 9000),
+        standard: authenticatedStudent.standard,
+        section: authenticatedStudent.section,
         rollNo: authenticatedStudent.rollNo,
         category: document.querySelector('input[name="category"]:checked').value,
         subject: document.getElementById('subject').value,
+        description: document.getElementById('description').value,
         isAnon: isAnon,
         isPublic: isPublic,
         status: "Unresolved",
         timestamp: "Just now"
       };
 
+      // Push to Cloud (Google Sheets)
+      if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+        fetch(GOOGLE_SHEET_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newTicket)
+        }).catch(err => console.error("Sheet Sync Failed:", err));
+      }
+
+      // Save Local Array & LocalStorage Backup
       complaintStore.unshift(newTicket);
+      saveToLocalStorage();
+
       document.getElementById('complaintForm').reset();
       
       if (isPublic) {
