@@ -41,51 +41,26 @@
     .orb-1 { background: var(--accent-blue); top: -80px; left: -80px; }
     .orb-2 { background: var(--accent-pink); bottom: -80px; right: -80px; }
 
-    .grid-2-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     /* LOGIN SCREEN */
-    .auth-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 85vh;
-    }
-
-    .auth-card {
-      max-width: 460px;
-      width: 100%;
-      text-align: center;
-    }
-
+    .auth-wrapper { display: flex; justify-content: center; align-items: center; min-height: 85vh; }
+    .auth-card { max-width: 460px; width: 100%; text-align: center; }
     .auth-brand { justify-content: center; margin-bottom: 16px; }
     .auth-card h2 { margin: 0 0 6px 0; font-size: 22px; }
     .auth-card p { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
 
     .demo-hint-box {
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px dashed var(--accent-blue);
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 20px;
-      text-align: left;
+      background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--accent-blue);
+      padding: 10px; border-radius: 8px; font-size: 11px; color: var(--text-muted);
+      margin-bottom: 20px; text-align: left;
     }
 
     /* SESSION BANNER */
     .logged-in-banner {
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      padding: 12px 16px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
+      background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 12px 16px; border-radius: 10px; display: flex; align-items: center;
+      gap: 12px; margin-bottom: 20px;
     }
     .banner-title { display: block; font-size: 11px; color: var(--text-muted); }
     .banner-user { font-weight: 700; color: var(--accent-cyan); font-size: 13px; }
@@ -94,15 +69,9 @@
     .portal-container { max-width: 650px; margin: 0 auto; }
 
     .glass-nav {
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
-      padding: 10px 18px;
-      border-radius: 99px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 32px;
+      background: var(--glass-bg); backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border); padding: 10px 18px; border-radius: 99px;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;
     }
 
     .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
@@ -208,7 +177,6 @@
   <div class="glow-orb orb-1"></div>
   <div class="glow-orb orb-2"></div>
 
-  <!-- SCREEN 1: LOGIN MODAL -->
   <div id="loginScreen" class="auth-wrapper">
     <div class="glass-card auth-card">
       <div class="brand auth-brand">
@@ -269,7 +237,6 @@
     </div>
   </div>
 
-  <!-- SCREEN 2: MAIN APPLICATION PORTAL -->
   <div id="portalApp" class="portal-container hidden">
     <nav class="glass-nav">
       <div class="brand">
@@ -283,7 +250,6 @@
       </div>
     </nav>
 
-    <!-- TAB 1: FILE COMPLAINT -->
     <main id="submitTab" class="tab-content">
       <header class="hero-header">
         <div class="status-pill">● Session Active</div>
@@ -297,7 +263,7 @@
             <span class="user-badge-icon">👤</span>
             <div>
               <span class="banner-title">Submitting as Logged-in Student:</span>
-              <span id="activeUserLabel" class="banner-user">PG - 1st Year (Sec A) | Roll No: ST-8042</span>
+              <span id="activeUserLabel" class="banner-user">Class 10 (Sec A) | Roll No: ST-8042</span>
             </div>
           </div>
 
@@ -330,7 +296,7 @@
 
           <div class="form-group">
             <label for="description" class="section-label">3. DETAILED EXPLANATION</label>
-            <textarea id="description" class="neon-input" rows="3" placeholder="Provide complete details (locations, times, specific incidents)..." required></textarea>
+            <textarea id="description" class="neon-input" rows="3" placeholder="Provide complete details..." required></textarea>
           </div>
 
           <div class="form-group">
@@ -352,7 +318,6 @@
       </div>
     </main>
 
-    <!-- TAB 2: PUBLIC BOARD -->
     <main id="publicTab" class="tab-content hidden">
       <header class="hero-header">
         <div class="status-pill warning">● Live Feed</div>
@@ -361,11 +326,10 @@
       </header>
 
       <div class="glass-card">
-        <div class="ticket-feed" id="publicFeedContainer"></div>
+        <div class="ticket-feed" id="publicFeedContainer">Loading complaints...</div>
       </div>
     </main>
 
-    <!-- TAB 3: MY DETAILS -->
     <main id="personalTab" class="tab-content hidden">
       <header class="hero-header">
         <div class="status-pill">● Verified Account</div>
@@ -378,7 +342,7 @@
           <div class="avatar-circle" id="userAvatar">RN</div>
           <div class="user-info">
             <h3 id="displayRollNo">Roll No: ST-8042</h3>
-            <p id="displayClassSection">Class: PG - 1st Year - Sec A</p>
+            <p id="displayClassSection">Class: Class 10 - Sec A</p>
             <p id="displayDob">DOB: Verified</p>
           </div>
           <button class="logout-btn" onclick="logoutStudent()">Sign Out</button>
@@ -402,27 +366,42 @@
   </div>
 
   <script>
-    // Paste Google Apps Script Web App URL here
+    // Paste Web App URL here
     const GOOGLE_SHEET_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
     let authenticatedStudent = null;
+    let complaintStore = JSON.parse(localStorage.getItem('unresolved_complaints')) || [];
 
-    // Load complaints from LocalStorage (Fallback / Immediate Persistence)
-    let complaintStore = JSON.parse(localStorage.getItem('unresolved_complaints')) || [
-      {
-        id: "UNR-1092",
-        rollNo: "ST-8042",
-        category: "Facilities",
-        subject: "Water cooler leak near Room 204",
-        isAnon: false,
-        isPublic: true,
-        status: "Unresolved",
-        timestamp: "15m ago"
-      }
-    ];
-
+    // Local Storage Save
     function saveToLocalStorage() {
       localStorage.setItem('unresolved_complaints', JSON.stringify(complaintStore));
+    }
+
+    // Google Sheets se Live Data Fetch Karna (ON PAGE REFRESH)
+    function fetchLiveComplaints() {
+      if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+        fetch(GOOGLE_SHEET_URL)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              complaintStore = data.reverse().map((item, index) => ({
+                id: "UNR-" + (1000 + index),
+                rollNo: item.rollNo,
+                category: item.category,
+                subject: item.subject,
+                description: item.description,
+                isAnon: false,
+                isPublic: true,
+                status: item.status || "Unresolved",
+                timestamp: "Synced"
+              }));
+              saveToLocalStorage();
+              renderPublicFeed();
+              if(authenticatedStudent) renderPersonalPortal();
+            }
+          })
+          .catch(err => console.error("Cloud Fetch Error:", err));
+      }
     }
 
     // 1. LOGIN SYSTEM
@@ -449,6 +428,8 @@
 
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('portalApp').classList.remove('hidden');
+
+      fetchLiveComplaints();
     });
 
     // 2. LOGOUT SYSTEM
@@ -459,7 +440,7 @@
       document.getElementById('loginScreen').classList.remove('hidden');
     }
 
-    // 3. SUBMIT TICKET WITH GOOGLE SHEETS & LOCAL STORAGE BACKUP
+    // 3. SUBMIT TICKET
     document.getElementById('complaintForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -480,7 +461,7 @@
         timestamp: "Just now"
       };
 
-      // Push to Cloud (Google Sheets)
+      // Push to Cloud
       if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
         fetch(GOOGLE_SHEET_URL, {
           method: "POST",
@@ -490,7 +471,7 @@
         }).catch(err => console.error("Sheet Sync Failed:", err));
       }
 
-      // Save Local Array & LocalStorage Backup
+      // Save Locally
       complaintStore.unshift(newTicket);
       saveToLocalStorage();
 
@@ -503,7 +484,7 @@
       }
     });
 
-    // 4. TAB NAVIGATION & RENDER
+    // 4. UI RENDERING
     function renderPublicFeed() {
       const container = document.getElementById('publicFeedContainer');
       container.innerHTML = '';
@@ -536,7 +517,7 @@
       const myTickets = complaintStore.filter(t => t.rollNo === authenticatedStudent.rollNo);
       
       document.getElementById('totalSubmitted').innerText = myTickets.length;
-      document.getElementById('totalResolved').innerText = myTickets.filter(t => t.status === 'Resolved').length;
+      document.getElementById('totalResolved').innerText = myTickets.filter(t => t.status.toLowerCase() === 'resolved').length;
 
       if (myTickets.length === 0) {
         container.innerHTML = '<p class="feed-meta">You have not submitted any complaints yet.</p>';
@@ -578,6 +559,9 @@
         document.getElementById('btnSubmit').classList.add('active');
       }
     }
+
+    // Initial Sync On Page Load
+    fetchLiveComplaints();
   </script>
 </body>
 </html>
