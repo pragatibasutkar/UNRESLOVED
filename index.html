@@ -123,7 +123,6 @@
 <body>
 
   <div class="container">
-    <!-- SCHOOL HEADER -->
     <div class="school-header">
       <div class="school-title">
         <span class="school-logo">🏫</span>
@@ -138,7 +137,6 @@
       </div>
     </div>
 
-    <!-- TAB 1: FILE COMPLAINT -->
     <div id="submitTab">
       <div class="glass-card">
         <div class="section-title">New Student Report</div>
@@ -184,30 +182,42 @@
       </div>
     </div>
 
-    <!-- TAB 2: PUBLIC BOARD (WITH DIRECT RESOLVE) -->
     <div id="boardTab" class="hidden">
       <div class="glass-card">
         <div class="section-title">Live Grievance Board</div>
-        <div id="boardFeed"></div>
+        <div id="boardFeed">Loading complaints...</div>
       </div>
     </div>
   </div>
 
   <script>
+    // Paste Apps Script URL here
     const GOOGLE_SHEET_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
-    // Demo Initial Data
-    let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [
-      { id: "UNR-101", class: "Class 10", rollNo: "ST-104", category: "Facilities", subject: "Water Cooler Leakage", desc: "Water cooler near Room 12 is leaking.", status: "Unresolved" },
-      { id: "UNR-102", class: "Class 12", rollNo: "ST-88", category: "Sports", subject: "Broken Basketball Net", desc: "Court 2 net needs replacement.", status: "Resolved" }
-    ];
+    let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
 
     function saveData() {
       localStorage.setItem('school_complaints', JSON.stringify(tickets));
       renderBoard();
     }
 
-    // FORM SUBMISSION
+    // Google Sheets se Live Fetch
+    function fetchComplaintsFromSheet() {
+      if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+        fetch(GOOGLE_SHEET_URL)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              tickets = data.reverse();
+              localStorage.setItem('school_complaints', JSON.stringify(tickets));
+              renderBoard();
+            }
+          })
+          .catch(err => console.error("Cloud Fetch Error:", err));
+      }
+    }
+
+    // Form Submit
     document.getElementById('complaintForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -221,23 +231,25 @@
         status: "Unresolved"
       };
 
-      // Push to Google Sheets (Cloud)
+      // Push to Google Sheets
       if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
         fetch(GOOGLE_SHEET_URL, {
           method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(newTicket)
+        }).then(() => {
+          setTimeout(fetchComplaintsFromSheet, 1000);
         });
       }
 
       tickets.unshift(newTicket);
       saveData();
       document.getElementById('complaintForm').reset();
-      alert("Complaint Filed Successfully!");
+      alert("Complaint Submitted Successfully!");
+      switchTab('boardTab', document.querySelectorAll('.tab-btn')[1]);
     });
 
-    // DIRECT RESOLVE FUNCTION (Website Se Direct Update)
+    // Direct Status Update (Website Se Mark as Resolved)
     function resolveTicket(ticketId) {
       const ticket = tickets.find(t => t.id === ticketId);
       if (ticket) {
@@ -246,31 +258,36 @@
       }
     }
 
-    // RENDER BOARD
+    // UI Render
     function renderBoard() {
       const feed = document.getElementById('boardFeed');
       feed.innerHTML = "";
+
+      if (tickets.length === 0) {
+        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>No complaints submitted yet.</p>";
+        return;
+      }
 
       tickets.forEach(t => {
         const isResolved = t.status === "Resolved";
         feed.innerHTML += `
           <div class="ticket-card">
             <div class="ticket-header">
-              <span class="ticket-id">${t.id} • ${t.category}</span>
+              <span class="ticket-id">${t.id || 'UNR-100'} • ${t.category}</span>
               <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status}</span>
             </div>
             <div class="ticket-title">${t.subject}</div>
             <div class="ticket-desc">${t.desc}</div>
             <div class="ticket-footer">
               <span>By: Roll ${t.rollNo} (${t.class})</span>
-              ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Mark as Resolved</button>` : '<span style="color:#34d399;">✓ Issue Fixed</span>'}
+              ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Mark as Resolved</button>` : '<span style="color:#34d399; font-weight:700;">✓ Fixed</span>'}
             </div>
           </div>
         `;
       });
     }
 
-    // TAB SWITCHING
+    // Tab Switcher
     function switchTab(tabId, btn) {
       document.getElementById('submitTab').classList.add('hidden');
       document.getElementById('boardTab').classList.add('hidden');
@@ -280,7 +297,8 @@
       btn.classList.add('active');
     }
 
-    // Initial Render
+    // Run On Load
+    fetchComplaintsFromSheet();
     renderBoard();
   </script>
 </body>
