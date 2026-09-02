@@ -240,9 +240,10 @@
   </div>
 
   <script>
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyzJhsg73_wYFobMtxhFSSsnaFIDy9MCEEtX-G5S5sXMgRs2aUyZjtlflQX7BcIiM3F/exec";
+    // Aapka Naya Deployed URL
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwV7HkFhlY40wDIgn4WbS5SaAkZpsxuOsOlDZ2cD9Q2KErB2RTpobCy_1JxTIHElNWS/exec";
 
-    let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
+    let tickets = [];
 
     function saveData() {
       localStorage.setItem('school_complaints', JSON.stringify(tickets));
@@ -252,17 +253,15 @@
 
     // Google Sheets se Fetch Data
     function fetchComplaintsFromSheet() {
-      if (GOOGLE_SHEET_URL !== "") {
-        fetch(GOOGLE_SHEET_URL)
-          .then(res => res.json())
-          .then(data => {
-            if (Array.isArray(data)) {
-              tickets = data.reverse();
-              saveData();
-            }
-          })
-          .catch(err => console.error("Cloud Fetch Error:", err));
-      }
+      fetch(GOOGLE_SHEET_URL)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            tickets = data.reverse();
+            saveData();
+          }
+        })
+        .catch(err => console.error("Cloud Fetch Error:", err));
     }
 
     // New Complaint Submit
@@ -286,7 +285,7 @@
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(newTicket)
       }).then(() => {
-        setTimeout(fetchComplaintsFromSheet, 1000);
+        setTimeout(fetchComplaintsFromSheet, 1200);
       });
 
       tickets.unshift(newTicket);
@@ -304,11 +303,11 @@
 
     // Verification Helper: Only Ticket Owner Can Resolve or Delete
     function verifyOwnership(ticket) {
-      const inputRoll = prompt(`Security Verification: Enter the Roll No associated with ticket (${ticket.id}) to proceed:`);
+      const inputRoll = prompt(`Security Check: Is complaint (${ticket.id}) ka Roll No enter karein authorization ke liye:`);
       if (inputRoll && inputRoll.trim().toLowerCase() === String(ticket.rollNo).trim().toLowerCase()) {
         return true;
       } else {
-        alert("❌ Unauthorized! Access Denied. Only the student who submitted this ticket can modify it.");
+        alert("❌ Unauthorized! Sirf wahi student ise modify/delete kar sakta hai jisne complaint submit ki thi.");
         return false;
       }
     }
@@ -341,7 +340,7 @@
         const ticket = tickets[ticketIndex];
         if (!verifyOwnership(ticket)) return;
 
-        if (confirm("Are you sure you want to permanently delete this complaint?")) {
+        if (confirm("Kya aap sach mein is complaint ko delete karna chahte hain?")) {
           tickets.splice(ticketIndex, 1);
           saveData();
 
@@ -362,7 +361,6 @@
       const feed = document.getElementById('boardFeed');
       feed.innerHTML = "";
 
-      // Only show non-private complaints
       const publicTickets = tickets.filter(t => !t.isPrivate);
 
       if (publicTickets.length === 0) {
@@ -443,11 +441,7 @@
     }
 
     fetchComplaintsFromSheet();
-    renderBoard();
-
-    setInterval(function() {
-      fetchComplaintsFromSheet();
-    }, 5000);
+    setInterval(fetchComplaintsFromSheet, 4000);
   </script>
 </body>
 </html>
