@@ -15,6 +15,7 @@
       --accent-cyan: #06b6d4;
       --success-green: #10b981;
       --warning-red: #ef4444;
+      --purple-private: #a855f7;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
     }
@@ -28,7 +29,7 @@
       min-height: 100vh;
     }
 
-    .container { max-width: 700px; margin: 0 auto; }
+    .container { max-width: 750px; margin: 0 auto; }
 
     .school-header {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
@@ -47,10 +48,10 @@
     .school-name h2 { margin: 0; font-size: 16px; font-weight: 800; color: #fff; }
     .school-name p { margin: 2px 0 0 0; font-size: 11px; color: var(--accent-cyan); }
 
-    .nav-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 12px; }
+    .nav-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 12px; }
     .tab-btn {
       background: none; border: none; color: var(--text-muted);
-      padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 12px;
+      padding: 8px 10px; border-radius: 8px; font-weight: 600; font-size: 11px;
       cursor: pointer; transition: all 0.2s ease;
     }
     .tab-btn.active { background: var(--school-blue); color: #fff; }
@@ -77,6 +78,12 @@
     .input-field option { background: #0f172a; color: #fff; }
     .input-field:focus { border-color: var(--school-blue); }
 
+    .checkbox-group {
+      display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 16px;
+      background: rgba(168, 85, 247, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+    .checkbox-group input { width: 16px; height: 16px; cursor: pointer; }
+
     .btn-submit {
       width: 100%; background: linear-gradient(135deg, var(--school-blue), var(--accent-cyan));
       border: none; color: white; padding: 12px; border-radius: 8px; font-weight: 700;
@@ -86,7 +93,11 @@
 
     .ticket-card {
       background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);
-      padding: 16px; border-radius: 12px; margin-bottom: 12px;
+      padding: 16px; border-radius: 12px; margin-bottom: 12px; position: relative;
+    }
+    .ticket-card.private-card {
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      background: rgba(88, 28, 135, 0.15);
     }
     .ticket-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .ticket-id { font-size: 12px; font-weight: 700; color: var(--accent-cyan); }
@@ -96,6 +107,7 @@
     }
     .badge-unresolved { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
     .badge-resolved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-private { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
 
     .ticket-title { font-size: 14px; font-weight: 700; margin: 0 0 6px 0; }
     .ticket-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
@@ -105,12 +117,21 @@
       border-top: 1px dashed var(--glass-border); padding-top: 10px; font-size: 11px; color: var(--text-muted);
     }
 
+    .action-btns { display: flex; gap: 8px; align-items: center; }
+
     .btn-resolve {
       background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success-green);
       color: #34d399; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
       cursor: pointer; transition: 0.2s ease;
     }
     .btn-resolve:hover { background: var(--success-green); color: #fff; }
+
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.15); border: 1px solid var(--warning-red);
+      color: #f87171; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: 0.2s ease;
+    }
+    .btn-delete:hover { background: var(--warning-red); color: #fff; }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .hidden { display: none !important; }
@@ -130,9 +151,11 @@
       <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('submitTab', this)">File Issue</button>
         <button class="tab-btn" onclick="switchTab('boardTab', this)">Public Board</button>
+        <button class="tab-btn" onclick="switchTab('privateTab', this)">🔒 Faculty Direct</button>
       </div>
     </div>
 
+    <!-- TAB 1: SUBMIT COMPLAINT -->
     <div id="submitTab">
       <div class="glass-card">
         <div class="section-title">New Student Report</div>
@@ -166,7 +189,7 @@
             <select id="catVal" class="input-field" required>
               <option value="Facilities">Facilities (Water, Fan, Bench)</option>
               <option value="Academics">Academics & Library</option>
-              <option value="Faculty">Faculty & Staff</option>
+              <option value="Faculty">Faculty & Staff Direct</option>
               <option value="Canteen">Canteen & Hygiene</option>
               <option value="Sports">Sports Equipment</option>
               <option value="Safety">Safety & Campus</option>
@@ -183,21 +206,40 @@
             <textarea id="descVal" class="input-field" rows="3" placeholder="Explain the issue in detail..." required></textarea>
           </div>
 
+          <div class="checkbox-group">
+            <input type="checkbox" id="privateCheck">
+            <label for="privateCheck" style="margin:0; cursor:pointer;">🔒 <strong>Private Ticket:</strong> Send directly to Faculty only (Will NOT show on Public Board)</label>
+          </div>
+
           <button type="submit" class="btn-submit">Submit Complaint</button>
         </form>
       </div>
     </div>
 
+    <!-- TAB 2: PUBLIC BOARD -->
     <div id="boardTab" class="hidden">
       <div class="glass-card">
-        <div class="section-title">Live Grievance Board (Auto-Syncing)</div>
+        <div class="section-title">Public Grievance Board (Auto-Syncing)</div>
         <div id="boardFeed">Loading complaints...</div>
       </div>
     </div>
+
+    <!-- TAB 3: FACULTY DIRECT / PERSONAL FEED -->
+    <div id="privateTab" class="hidden">
+      <div class="glass-card">
+        <div class="section-title">🔒 Private Faculty Communication</div>
+        <p style="font-size: 12px; color: var(--text-muted);">Enter your Student Roll No to view private direct communications between you and Faculty.</p>
+        <div class="form-group" style="display:flex; gap:10px;">
+          <input type="text" id="searchRoll" class="input-field" placeholder="Enter your Roll No (e.g. ST-402)">
+          <button class="btn-submit" style="width: auto; padding: 0 20px;" onclick="renderPrivateBoard()">View</button>
+        </div>
+        <div id="privateFeed" style="margin-top:20px;">Enter Roll No to load private complaints.</div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    // Aapka Google Apps Script URL yahan add ho gaya hai:
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyzJhsg73_wYFobMtxhFSSsnaFIDy9MCEEtX-G5S5sXMgRs2aUyZjtlflQX7BcIiM3F/exec";
 
     let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
@@ -205,9 +247,10 @@
     function saveData() {
       localStorage.setItem('school_complaints', JSON.stringify(tickets));
       renderBoard();
+      renderPrivateBoard();
     }
 
-    // Google Sheets se Live Data Fetch
+    // Google Sheets se Fetch Data
     function fetchComplaintsFromSheet() {
       if (GOOGLE_SHEET_URL !== "") {
         fetch(GOOGLE_SHEET_URL)
@@ -226,17 +269,18 @@
     document.getElementById('complaintForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
+      const isPrivate = document.getElementById('privateCheck').checked;
       const newTicket = {
         id: "UNR-" + Math.floor(100 + Math.random() * 900),
         class: document.getElementById('classVal').value,
-        rollNo: document.getElementById('rollVal').value,
+        rollNo: document.getElementById('rollVal').value.trim(),
         category: document.getElementById('catVal').value,
         subject: document.getElementById('subjectVal').value,
         desc: document.getElementById('descVal').value,
-        status: "Unresolved"
+        status: "Unresolved",
+        isPrivate: isPrivate
       };
 
-      // Cloud/Google Sheet par push karega
       fetch(GOOGLE_SHEET_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -248,14 +292,33 @@
       tickets.unshift(newTicket);
       saveData();
       document.getElementById('complaintForm').reset();
-      alert("Complaint Submitted Successfully!");
-      switchTab('boardTab', document.querySelectorAll('.tab-btn')[1]);
+      alert(isPrivate ? "Private Complaint Sent to Faculty!" : "Public Complaint Submitted!");
+      
+      if(isPrivate) {
+        document.getElementById('searchRoll').value = newTicket.rollNo;
+        switchTab('privateTab', document.querySelectorAll('.tab-btn')[2]);
+      } else {
+        switchTab('boardTab', document.querySelectorAll('.tab-btn')[1]);
+      }
     });
+
+    // Verification Helper: Only Ticket Owner Can Resolve or Delete
+    function verifyOwnership(ticket) {
+      const inputRoll = prompt(`Security Verification: Enter the Roll No associated with ticket (${ticket.id}) to proceed:`);
+      if (inputRoll && inputRoll.trim().toLowerCase() === String(ticket.rollNo).trim().toLowerCase()) {
+        return true;
+      } else {
+        alert("❌ Unauthorized! Access Denied. Only the student who submitted this ticket can modify it.");
+        return false;
+      }
+    }
 
     // Mark as Resolved
     function resolveTicket(ticketId) {
       const ticket = tickets.find(t => t.id === ticketId);
       if (ticket) {
+        if (!verifyOwnership(ticket)) return;
+
         ticket.status = "Resolved";
         saveData();
 
@@ -264,36 +327,105 @@
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({
             action: "updateStatus",
-            subject: ticket.subject,
+            id: ticket.id,
             status: "Resolved"
           })
         });
       }
     }
 
-    // UI Render Function
+    // Delete Ticket Function
+    function deleteTicket(ticketId) {
+      const ticketIndex = tickets.findIndex(t => t.id === ticketId);
+      if (ticketIndex !== -1) {
+        const ticket = tickets[ticketIndex];
+        if (!verifyOwnership(ticket)) return;
+
+        if (confirm("Are you sure you want to permanently delete this complaint?")) {
+          tickets.splice(ticketIndex, 1);
+          saveData();
+
+          fetch(GOOGLE_SHEET_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+              action: "deleteTicket",
+              id: ticket.id
+            })
+          });
+        }
+      }
+    }
+
+    // UI Render Function - PUBLIC BOARD
     function renderBoard() {
       const feed = document.getElementById('boardFeed');
       feed.innerHTML = "";
 
-      if (tickets.length === 0) {
-        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>No complaints submitted yet.</p>";
+      // Only show non-private complaints
+      const publicTickets = tickets.filter(t => !t.isPrivate);
+
+      if (publicTickets.length === 0) {
+        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>No public complaints submitted yet.</p>";
         return;
       }
 
-      tickets.forEach(t => {
+      publicTickets.forEach(t => {
         const isResolved = t.status === "Resolved";
         feed.innerHTML += `
           <div class="ticket-card">
             <div class="ticket-header">
-              <span class="ticket-id">${t.id || 'UNR-100'} • ${t.category}</span>
+              <span class="ticket-id">${t.id} • ${t.category}</span>
               <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status}</span>
             </div>
             <div class="ticket-title">${t.subject}</div>
             <div class="ticket-desc">${t.desc}</div>
             <div class="ticket-footer">
               <span>By: Roll ${t.rollNo} (${t.class})</span>
-              ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Mark as Resolved</button>` : '<span style="color:#34d399; font-weight:700;">✓ Fixed</span>'}
+              <div class="action-btns">
+                ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Fixed</span>'}
+                <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // UI Render Function - PRIVATE BOARD (Faculty Direct)
+    function renderPrivateBoard() {
+      const feed = document.getElementById('privateFeed');
+      const searchRoll = document.getElementById('searchRoll').value.trim();
+
+      if (!searchRoll) {
+        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Please enter your Roll No above.</p>";
+        return;
+      }
+
+      const myPrivateTickets = tickets.filter(t => t.isPrivate && String(t.rollNo).toLowerCase() === searchRoll.toLowerCase());
+      feed.innerHTML = "";
+
+      if (myPrivateTickets.length === 0) {
+        feed.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>No private complaints found for Roll No: <strong>${searchRoll}</strong></p>`;
+        return;
+      }
+
+      myPrivateTickets.forEach(t => {
+        const isResolved = t.status === "Resolved";
+        feed.innerHTML += `
+          <div class="ticket-card private-card">
+            <div class="ticket-header">
+              <span class="ticket-id">${t.id} • ${t.category}</span>
+              <span class="badge badge-private">🔒 Private (Faculty Direct)</span>
+            </div>
+            <div class="ticket-title">${t.subject}</div>
+            <div class="ticket-desc">${t.desc}</div>
+            <div class="ticket-footer">
+              <span>Status: <strong style="color:${isResolved ? '#34d399' : '#f87171'}">${t.status}</strong></span>
+              <div class="action-btns">
+                ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : ''}
+                <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
+              </div>
             </div>
           </div>
         `;
@@ -303,17 +435,16 @@
     function switchTab(tabId, btn) {
       document.getElementById('submitTab').classList.add('hidden');
       document.getElementById('boardTab').classList.add('hidden');
+      document.getElementById('privateTab').classList.add('hidden');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
       document.getElementById(tabId).classList.remove('hidden');
       btn.classList.add('active');
     }
 
-    // Initial fetch on page load
     fetchComplaintsFromSheet();
     renderBoard();
 
-    // AUTO-POLLING: Har 5 seconds mein live check karega taaki sabhi devices sync rahein!
     setInterval(function() {
       fetchComplaintsFromSheet();
     }, 5000);
