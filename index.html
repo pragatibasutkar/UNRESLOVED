@@ -30,7 +30,6 @@
 
     .container { max-width: 700px; margin: 0 auto; }
 
-    /* BRANDING HEADER */
     .school-header {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
       border: 1px solid var(--glass-border);
@@ -56,7 +55,6 @@
     }
     .tab-btn.active { background: var(--school-blue); color: #fff; }
 
-    /* CARD STYLE */
     .glass-card {
       background: var(--card-bg);
       border: 1px solid var(--glass-border);
@@ -69,7 +67,6 @@
 
     .section-title { font-size: 14px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* FORM ELEMENTS */
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
     
@@ -87,7 +84,6 @@
     }
     .btn-submit:hover { opacity: 0.9; }
 
-    /* FEED & CARDS */
     .ticket-card {
       background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);
       padding: 16px; border-radius: 12px; margin-bottom: 12px;
@@ -109,7 +105,6 @@
       border-top: 1px dashed var(--glass-border); padding-top: 10px; font-size: 11px; color: var(--text-muted);
     }
 
-    /* DIRECT RESOLVE BUTTON */
     .btn-resolve {
       background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success-green);
       color: #34d399; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
@@ -195,15 +190,15 @@
 
     <div id="boardTab" class="hidden">
       <div class="glass-card">
-        <div class="section-title">Live Grievance Board</div>
+        <div class="section-title">Live Grievance Board (Auto-Syncing)</div>
         <div id="boardFeed">Loading complaints...</div>
       </div>
     </div>
   </div>
 
   <script>
-    // Paste Apps Script URL here
-    const GOOGLE_SHEET_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+    // Aapka Google Apps Script URL yahan add ho gaya hai:
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyzJhsg73_wYFobMtxhFSSsnaFIDy9MCEEtX-G5S5sXMgRs2aUyZjtlflQX7BcIiM3F/exec";
 
     let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
 
@@ -212,23 +207,22 @@
       renderBoard();
     }
 
-    // Google Sheets se Live Fetch
+    // Google Sheets se Live Data Fetch
     function fetchComplaintsFromSheet() {
-      if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+      if (GOOGLE_SHEET_URL !== "") {
         fetch(GOOGLE_SHEET_URL)
           .then(res => res.json())
           .then(data => {
-            if (Array.isArray(data) && data.length > 0) {
+            if (Array.isArray(data)) {
               tickets = data.reverse();
-              localStorage.setItem('school_complaints', JSON.stringify(tickets));
-              renderBoard();
+              saveData();
             }
           })
           .catch(err => console.error("Cloud Fetch Error:", err));
       }
     }
 
-    // Form Submit
+    // New Complaint Submit
     document.getElementById('complaintForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -242,16 +236,14 @@
         status: "Unresolved"
       };
 
-      // Push to Google Sheets
-      if (GOOGLE_SHEET_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
-        fetch(GOOGLE_SHEET_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(newTicket)
-        }).then(() => {
-          setTimeout(fetchComplaintsFromSheet, 1000);
-        });
-      }
+      // Cloud/Google Sheet par push karega
+      fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(newTicket)
+      }).then(() => {
+        setTimeout(fetchComplaintsFromSheet, 1000);
+      });
 
       tickets.unshift(newTicket);
       saveData();
@@ -260,16 +252,26 @@
       switchTab('boardTab', document.querySelectorAll('.tab-btn')[1]);
     });
 
-    // Direct Status Update (Website Se Mark as Resolved)
+    // Mark as Resolved
     function resolveTicket(ticketId) {
       const ticket = tickets.find(t => t.id === ticketId);
       if (ticket) {
         ticket.status = "Resolved";
         saveData();
+
+        fetch(GOOGLE_SHEET_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            action: "updateStatus",
+            subject: ticket.subject,
+            status: "Resolved"
+          })
+        });
       }
     }
 
-    // UI Render
+    // UI Render Function
     function renderBoard() {
       const feed = document.getElementById('boardFeed');
       feed.innerHTML = "";
@@ -298,7 +300,6 @@
       });
     }
 
-    // Tab Switcher
     function switchTab(tabId, btn) {
       document.getElementById('submitTab').classList.add('hidden');
       document.getElementById('boardTab').classList.add('hidden');
@@ -308,9 +309,14 @@
       btn.classList.add('active');
     }
 
-    // Run On Load
+    // Initial fetch on page load
     fetchComplaintsFromSheet();
     renderBoard();
+
+    // AUTO-POLLING: Har 5 seconds mein live check karega taaki sabhi devices sync rahein!
+    setInterval(function() {
+      fetchComplaintsFromSheet();
+    }, 5000);
   </script>
 </body>
 </html>
