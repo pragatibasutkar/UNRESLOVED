@@ -155,7 +155,6 @@
       </div>
     </div>
 
-    <!-- TAB 1: SUBMIT COMPLAINT -->
     <div id="submitTab">
       <div class="glass-card">
         <div class="section-title">New Student Report</div>
@@ -216,7 +215,6 @@
       </div>
     </div>
 
-    <!-- TAB 2: PUBLIC BOARD -->
     <div id="boardTab" class="hidden">
       <div class="glass-card">
         <div class="section-title">Public Grievance Board (Auto-Syncing)</div>
@@ -224,7 +222,6 @@
       </div>
     </div>
 
-    <!-- TAB 3: FACULTY DIRECT / PERSONAL FEED -->
     <div id="privateTab" class="hidden">
       <div class="glass-card">
         <div class="section-title">🔒 Private Faculty Communication</div>
@@ -240,7 +237,6 @@
   </div>
 
   <script>
-    // Aapka Naya Deployed URL
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwV7HkFhlY40wDIgn4WbS5SaAkZpsxuOsOlDZ2cD9Q2KErB2RTpobCy_1JxTIHElNWS/exec";
 
     let tickets = [];
@@ -301,20 +297,26 @@
       }
     });
 
-    // Verification Helper: Only Ticket Owner Can Resolve or Delete
+    // Verification Helper: Exact Match Case-Insensitive Logic
     function verifyOwnership(ticket) {
-      const inputRoll = prompt(`Security Check: Is complaint (${ticket.id}) ka Roll No enter karein authorization ke liye:`);
-      if (inputRoll && inputRoll.trim().toLowerCase() === String(ticket.rollNo).trim().toLowerCase()) {
+      const inputRoll = prompt(`Security Check: Complaint (${ticket.id}) ka Roll No enter karein authorization ke liye:`);
+      
+      if (!inputRoll) return false;
+
+      const cleanInput = String(inputRoll).trim().toLowerCase();
+      const cleanOwner = String(ticket.rollNo).trim().toLowerCase();
+
+      if (cleanInput === cleanOwner) {
         return true;
       } else {
-        alert("❌ Unauthorized! Sirf wahi student ise modify/delete kar sakta hai jisne complaint submit ki thi.");
+        alert(`❌ Unauthorized! Entered Roll No match nahi hua.`);
         return false;
       }
     }
 
     // Mark as Resolved
     function resolveTicket(ticketId) {
-      const ticket = tickets.find(t => t.id === ticketId);
+      const ticket = tickets.find(t => String(t.id) === String(ticketId));
       if (ticket) {
         if (!verifyOwnership(ticket)) return;
 
@@ -329,13 +331,15 @@
             id: ticket.id,
             status: "Resolved"
           })
+        }).then(() => {
+          setTimeout(fetchComplaintsFromSheet, 1000);
         });
       }
     }
 
     // Delete Ticket Function
     function deleteTicket(ticketId) {
-      const ticketIndex = tickets.findIndex(t => t.id === ticketId);
+      const ticketIndex = tickets.findIndex(t => String(t.id) === String(ticketId));
       if (ticketIndex !== -1) {
         const ticket = tickets[ticketIndex];
         if (!verifyOwnership(ticket)) return;
@@ -351,6 +355,8 @@
               action: "deleteTicket",
               id: ticket.id
             })
+          }).then(() => {
+            setTimeout(fetchComplaintsFromSheet, 1000);
           });
         }
       }
@@ -400,7 +406,7 @@
         return;
       }
 
-      const myPrivateTickets = tickets.filter(t => t.isPrivate && String(t.rollNo).toLowerCase() === searchRoll.toLowerCase());
+      const myPrivateTickets = tickets.filter(t => t.isPrivate && String(t.rollNo).trim().toLowerCase() === searchRoll.toLowerCase());
       feed.innerHTML = "";
 
       if (myPrivateTickets.length === 0) {
