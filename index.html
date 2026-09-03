@@ -155,6 +155,7 @@
       </div>
     </div>
 
+    <!-- TAB 1: SUBMIT COMPLAINT -->
     <div id="submitTab">
       <div class="glass-card">
         <div class="section-title">New Student Report</div>
@@ -178,8 +179,8 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Roll / Student ID</label>
-              <input type="text" id="rollVal" class="input-field" placeholder="e.g. ST-402" required>
+              <label>Student Unique ID / Reg No</label>
+              <input type="text" id="studentIdVal" class="input-field" placeholder="e.g. STU-101" required>
             </div>
           </div>
 
@@ -215,6 +216,7 @@
       </div>
     </div>
 
+    <!-- TAB 2: PUBLIC BOARD -->
     <div id="boardTab" class="hidden">
       <div class="glass-card">
         <div class="section-title">Public Grievance Board (Auto-Syncing)</div>
@@ -222,15 +224,16 @@
       </div>
     </div>
 
+    <!-- TAB 3: FACULTY DIRECT / PERSONAL FEED -->
     <div id="privateTab" class="hidden">
       <div class="glass-card">
         <div class="section-title">🔒 Private Faculty Communication</div>
-        <p style="font-size: 12px; color: var(--text-muted);">Enter your Student Roll No to view private direct communications between you and Faculty.</p>
+        <p style="font-size: 12px; color: var(--text-muted);">Enter your Student Unique ID to view private direct communications between you and Faculty.</p>
         <div class="form-group" style="display:flex; gap:10px;">
-          <input type="text" id="searchRoll" class="input-field" placeholder="Enter your Roll No (e.g. ST-402)">
+          <input type="text" id="searchStudentId" class="input-field" placeholder="Enter Student ID (e.g. STU-101)">
           <button class="btn-submit" style="width: auto; padding: 0 20px;" onclick="renderPrivateBoard()">View</button>
         </div>
-        <div id="privateFeed" style="margin-top:20px;">Enter Roll No to load private complaints.</div>
+        <div id="privateFeed" style="margin-top:20px;">Enter Student ID to load private complaints.</div>
       </div>
     </div>
 
@@ -239,7 +242,7 @@
   <script>
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwV7HkFhlY40wDIgn4WbS5SaAkZpsxuOsOlDZ2cD9Q2KErB2RTpobCy_1JxTIHElNWS/exec";
 
-    let tickets = [];
+    let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
 
     function saveData() {
       localStorage.setItem('school_complaints', JSON.stringify(tickets));
@@ -268,7 +271,7 @@
       const newTicket = {
         id: "UNR-" + Math.floor(100 + Math.random() * 900),
         class: document.getElementById('classVal').value,
-        rollNo: document.getElementById('rollVal').value.trim(),
+        studentId: document.getElementById('studentIdVal').value.trim(),
         category: document.getElementById('catVal').value,
         subject: document.getElementById('subjectVal').value,
         desc: document.getElementById('descVal').value,
@@ -276,40 +279,41 @@
         isPrivate: isPrivate
       };
 
+      tickets.unshift(newTicket);
+      saveData();
+
       fetch(GOOGLE_SHEET_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(newTicket)
       }).then(() => {
-        setTimeout(fetchComplaintsFromSheet, 1200);
+        setTimeout(fetchComplaintsFromSheet, 1000);
       });
 
-      tickets.unshift(newTicket);
-      saveData();
       document.getElementById('complaintForm').reset();
       alert(isPrivate ? "Private Complaint Sent to Faculty!" : "Public Complaint Submitted!");
       
       if(isPrivate) {
-        document.getElementById('searchRoll').value = newTicket.rollNo;
+        document.getElementById('searchStudentId').value = newTicket.studentId;
         switchTab('privateTab', document.querySelectorAll('.tab-btn')[2]);
       } else {
         switchTab('boardTab', document.querySelectorAll('.tab-btn')[1]);
       }
     });
 
-    // Verification Helper: Exact Match Case-Insensitive Logic
+    // Security Verification Check
     function verifyOwnership(ticket) {
-      const inputRoll = prompt(`Security Check: Complaint (${ticket.id}) ka Roll No enter karein authorization ke liye:`);
+      const inputId = prompt(`Security Check: Complaint (${ticket.id}) ki Student ID enter karein authorization ke liye:`);
       
-      if (!inputRoll) return false;
+      if (!inputId) return false;
 
-      const cleanInput = String(inputRoll).trim().toLowerCase();
-      const cleanOwner = String(ticket.rollNo).trim().toLowerCase();
+      const cleanInput = String(inputId).trim().toLowerCase();
+      const cleanOwner = String(ticket.studentId || ticket.rollNo || "").trim().toLowerCase();
 
       if (cleanInput === cleanOwner) {
         return true;
       } else {
-        alert(`❌ Unauthorized! Entered Roll No match nahi hua.`);
+        alert(`❌ Security Check Failed! Incorrect Student ID.`);
         return false;
       }
     }
@@ -331,13 +335,11 @@
             id: ticket.id,
             status: "Resolved"
           })
-        }).then(() => {
-          setTimeout(fetchComplaintsFromSheet, 1000);
         });
       }
     }
 
-    // Delete Ticket Function
+    // Delete Ticket Function (Instant Removal Fix)
     function deleteTicket(ticketId) {
       const ticketIndex = tickets.findIndex(t => String(t.id) === String(ticketId));
       if (ticketIndex !== -1) {
@@ -345,9 +347,11 @@
         if (!verifyOwnership(ticket)) return;
 
         if (confirm("Kya aap sach mein is complaint ko delete karna chahte hain?")) {
+          // Instant screen aur LocalStorage se delete
           tickets.splice(ticketIndex, 1);
           saveData();
 
+          // Cloud Sheet Update
           fetch(GOOGLE_SHEET_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
@@ -355,8 +359,6 @@
               action: "deleteTicket",
               id: ticket.id
             })
-          }).then(() => {
-            setTimeout(fetchComplaintsFromSheet, 1000);
           });
         }
       }
@@ -365,6 +367,7 @@
     // UI Render Function - PUBLIC BOARD
     function renderBoard() {
       const feed = document.getElementById('boardFeed');
+      if (!feed) return;
       feed.innerHTML = "";
 
       const publicTickets = tickets.filter(t => !t.isPrivate);
@@ -376,6 +379,7 @@
 
       publicTickets.forEach(t => {
         const isResolved = t.status === "Resolved";
+        const displayId = t.studentId || t.rollNo || "N/A";
         feed.innerHTML += `
           <div class="ticket-card">
             <div class="ticket-header">
@@ -385,7 +389,7 @@
             <div class="ticket-title">${t.subject}</div>
             <div class="ticket-desc">${t.desc}</div>
             <div class="ticket-footer">
-              <span>By: Roll ${t.rollNo} (${t.class})</span>
+              <span>ID: ${displayId} (${t.class})</span>
               <div class="action-btns">
                 ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Fixed</span>'}
                 <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
@@ -399,18 +403,20 @@
     // UI Render Function - PRIVATE BOARD (Faculty Direct)
     function renderPrivateBoard() {
       const feed = document.getElementById('privateFeed');
-      const searchRoll = document.getElementById('searchRoll').value.trim();
+      if (!feed) return;
+      
+      const searchStudentId = document.getElementById('searchStudentId').value.trim();
 
-      if (!searchRoll) {
-        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Please enter your Roll No above.</p>";
+      if (!searchStudentId) {
+        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Please enter your Student Unique ID above.</p>";
         return;
       }
 
-      const myPrivateTickets = tickets.filter(t => t.isPrivate && String(t.rollNo).trim().toLowerCase() === searchRoll.toLowerCase());
+      const myPrivateTickets = tickets.filter(t => t.isPrivate && String(t.studentId || t.rollNo || "").trim().toLowerCase() === searchStudentId.toLowerCase());
       feed.innerHTML = "";
 
       if (myPrivateTickets.length === 0) {
-        feed.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>No private complaints found for Roll No: <strong>${searchRoll}</strong></p>`;
+        feed.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>No private complaints found for ID: <strong>${searchStudentId}</strong></p>`;
         return;
       }
 
@@ -446,8 +452,10 @@
       btn.classList.add('active');
     }
 
+    // Initial Load & Auto Refresh
+    renderBoard();
     fetchComplaintsFromSheet();
-    setInterval(fetchComplaintsFromSheet, 4000);
+    setInterval(fetchComplaintsFromSheet, 5000);
   </script>
 </body>
 </html>
