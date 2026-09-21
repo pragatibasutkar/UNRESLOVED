@@ -256,7 +256,7 @@
 
   <script>
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwV7HkFhlY40wDIgn4WbS5SaAkZpsxuOsOlDZ2cD9Q2KErB2RTpobCy_1JxTIHElNWS/exec";
-    const ADMIN_PASSCODE = "admin123"; // 👈 Passcode yahan change kar sakte hain
+    const ADMIN_PASSCODE = "admin123";
 
     let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
     let isAdminLoggedIn = false;
@@ -268,13 +268,16 @@
       if(isAdminLoggedIn) renderAdminBoard();
     }
 
-    // Google Sheets se Fetch Data
+    // Google Sheets se Fetch Data (UPDATED: Empty/Blank Ticket Filter Added)
     function fetchComplaintsFromSheet() {
       fetch(GOOGLE_SHEET_URL)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            tickets = data.reverse();
+            // STEP 2 FIX: Khali/Deleted rows ko filter kar rahe hain taaki dot (.) na bane
+            tickets = data
+              .filter(t => t && t.id && String(t.id).trim() !== "")
+              .reverse();
             saveData();
           }
         })
@@ -321,7 +324,7 @@
 
     // Verification check for normal users
     function verifyOwnership(ticket) {
-      if (isAdminLoggedIn) return true; // Admin bypasses prompt
+      if (isAdminLoggedIn) return true;
       
       const inputId = prompt(`Security Check: Complaint (${ticket.id}) ki Student ID enter karein:`);
       if (!inputId) return false;
@@ -387,7 +390,7 @@
       if (!feed) return;
       feed.innerHTML = "";
 
-      const publicTickets = tickets.filter(t => !t.isPrivate);
+      const publicTickets = tickets.filter(t => t && !t.isPrivate);
 
       if (publicTickets.length === 0) {
         feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>No public complaints submitted yet.</p>";
@@ -429,7 +432,7 @@
         return;
       }
 
-      const myPrivateTickets = tickets.filter(t => t.isPrivate && String(t.studentId || t.rollNo || "").trim().toLowerCase() === searchStudentId.toLowerCase());
+      const myPrivateTickets = tickets.filter(t => t && t.isPrivate && String(t.studentId || t.rollNo || "").trim().toLowerCase() === searchStudentId.toLowerCase());
       feed.innerHTML = "";
 
       if (myPrivateTickets.length === 0) {
