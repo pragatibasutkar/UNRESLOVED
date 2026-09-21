@@ -268,13 +268,12 @@
       if(isAdminLoggedIn) renderAdminBoard();
     }
 
-    // Strict Filter for Valid Complaints
+    // Google Sheets Data Fetch
     function fetchComplaintsFromSheet() {
       fetch(GOOGLE_SHEET_URL)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            // Bilkul empty ya corrupted row ko permanently ignore karega
             tickets = data
               .filter(t => t && (t.id || t.subject) && String(t.id || t.subject).trim() !== "")
               .reverse();
@@ -322,20 +321,32 @@
       }
     });
 
-    // Verification check for normal users
+    // Helper: Find Saved Student ID from all potential fields
+    function getTicketOwnerId(ticket) {
+      return String(ticket.studentId || ticket.rollNo || ticket.regNo || ticket['Student Unique ID'] || '').trim();
+    }
+
+    // Improved Verification check
     function verifyOwnership(ticket) {
-      if (isAdminLoggedIn) return true;
+      if (isAdminLoggedIn) return true; // Admin directly bypasses
       
-      const inputId = prompt(`Security Check: Complaint (${ticket.id || 'Ticket'}) ki Student ID enter karein:`);
+      const ownerId = getTicketOwnerId(ticket);
+      
+      // If no owner ID exists in the system (e.g. N/A), allow delete/resolve directly
+      if (!ownerId || ownerId.toLowerCase() === 'n/a') {
+        return true;
+      }
+
+      const inputId = prompt(`Security Check: Is complaint (${ticket.id || 'Ticket'}) ki Student ID enter karein:`);
       if (!inputId) return false;
 
       const cleanInput = String(inputId).trim().toLowerCase();
-      const cleanOwner = String(ticket.studentId || ticket.rollNo || "").trim().toLowerCase();
+      const cleanOwner = ownerId.toLowerCase();
 
       if (cleanInput === cleanOwner) {
         return true;
       } else {
-        alert(`❌ Security Check Failed! Incorrect Student ID.`);
+        alert(`❌ Security Check Failed!\nAapne enter kiya: "${inputId}"\nSystem mein saved hai: "${ownerId}"`);
         return false;
       }
     }
@@ -384,7 +395,7 @@
       }
     }
 
-    // Helper: Smart Header Text without orphan dots
+    // Header Title helper without orphan dots
     function getHeaderTitle(t) {
       const idText = t.id ? t.id : '';
       const catText = t.category ? t.category : '';
@@ -408,7 +419,7 @@
 
       publicTickets.forEach(t => {
         const isResolved = (t.status || "").toLowerCase() === "resolved";
-        const displayId = t.studentId || t.rollNo || "N/A";
+        const ownerId = getTicketOwnerId(t) || "N/A";
         const displayClass = t.class ? ` (${t.class})` : '';
 
         feed.innerHTML += `
@@ -420,7 +431,7 @@
             ${t.subject ? `<div class="ticket-title">${t.subject}</div>` : ''}
             ${t.desc ? `<div class="ticket-desc">${t.desc}</div>` : ''}
             <div class="ticket-footer">
-              <span>ID: ${displayId}${displayClass}</span>
+              <span>ID: ${ownerId}${displayClass}</span>
               <div class="action-btns">
                 ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Fixed</span>'}
                 <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
@@ -443,7 +454,7 @@
         return;
       }
 
-      const myPrivateTickets = tickets.filter(t => t && t.isPrivate && String(t.studentId || t.rollNo || "").trim().toLowerCase() === searchStudentId.toLowerCase());
+      const myPrivateTickets = tickets.filter(t => t && t.isPrivate && getTicketOwnerId(t).toLowerCase() === searchStudentId.toLowerCase());
       feed.innerHTML = "";
 
       if (myPrivateTickets.length === 0) {
@@ -486,7 +497,7 @@
 
       tickets.forEach(t => {
         const isResolved = (t.status || "").toLowerCase() === "resolved";
-        const displayId = t.studentId || t.rollNo || "N/A";
+        const ownerId = getTicketOwnerId(t) || "N/A";
         const displayClass = t.class ? ` (${t.class})` : '';
 
         feed.innerHTML += `
@@ -498,7 +509,7 @@
             ${t.subject ? `<div class="ticket-title">${t.subject}</div>` : ''}
             ${t.desc ? `<div class="ticket-desc">${t.desc}</div>` : ''}
             <div class="ticket-footer">
-              <span>Student ID: <strong style="color:#fff;">${displayId}</strong>${displayClass}</span>
+              <span>Student ID: <strong style="color:#fff;">${ownerId}</strong>${displayClass}</span>
               <div class="action-btns">
                 ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Resolved</span>'}
                 <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
