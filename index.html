@@ -273,6 +273,7 @@
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
+            // Sheet se fresh array le kar local storage sync aur reset kar rahe hain
             tickets = data
               .filter(t => t && (t.id || t.subject) && String(t.id || t.subject).trim() !== "")
               .reverse();
@@ -377,6 +378,8 @@
               action: "deleteTicket",
               id: ticket.id
             })
+          }).then(() => {
+            setTimeout(fetchComplaintsFromSheet, 1500);
           });
         }
       }
@@ -540,7 +543,8 @@
 
     renderBoard();
     fetchComplaintsFromSheet();
-    setInterval(fetchComplaintsFromSheet, 5000);
+    // Har 3 second mein auto-sync chalega
+    setInterval(fetchComplaintsFromSheet, 3000);
   </script>
 </body>
 </html>
