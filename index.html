@@ -268,15 +268,15 @@
       if(isAdminLoggedIn) renderAdminBoard();
     }
 
-    // Google Sheets se Fetch Data (UPDATED: Empty/Blank Ticket Filter Added)
+    // Strict Filter for Valid Complaints
     function fetchComplaintsFromSheet() {
       fetch(GOOGLE_SHEET_URL)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            // STEP 2 FIX: Khali/Deleted rows ko filter kar rahe hain taaki dot (.) na bane
+            // Bilkul empty ya corrupted row ko permanently ignore karega
             tickets = data
-              .filter(t => t && t.id && String(t.id).trim() !== "")
+              .filter(t => t && (t.id || t.subject) && String(t.id || t.subject).trim() !== "")
               .reverse();
             saveData();
           }
@@ -326,7 +326,7 @@
     function verifyOwnership(ticket) {
       if (isAdminLoggedIn) return true;
       
-      const inputId = prompt(`Security Check: Complaint (${ticket.id}) ki Student ID enter karein:`);
+      const inputId = prompt(`Security Check: Complaint (${ticket.id || 'Ticket'}) ki Student ID enter karein:`);
       if (!inputId) return false;
 
       const cleanInput = String(inputId).trim().toLowerCase();
@@ -384,6 +384,15 @@
       }
     }
 
+    // Helper: Smart Header Text without orphan dots
+    function getHeaderTitle(t) {
+      const idText = t.id ? t.id : '';
+      const catText = t.category ? t.category : '';
+      
+      if (idText && catText) return `${idText} • ${catText}`;
+      return idText || catText || 'Grievance Ticket';
+    }
+
     // UI Render Function - PUBLIC BOARD
     function renderBoard() {
       const feed = document.getElementById('boardFeed');
@@ -398,18 +407,20 @@
       }
 
       publicTickets.forEach(t => {
-        const isResolved = t.status === "Resolved";
+        const isResolved = (t.status || "").toLowerCase() === "resolved";
         const displayId = t.studentId || t.rollNo || "N/A";
+        const displayClass = t.class ? ` (${t.class})` : '';
+
         feed.innerHTML += `
           <div class="ticket-card">
             <div class="ticket-header">
-              <span class="ticket-id">${t.id} • ${t.category}</span>
-              <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status}</span>
+              <span class="ticket-id">${getHeaderTitle(t)}</span>
+              <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status || 'Unresolved'}</span>
             </div>
-            <div class="ticket-title">${t.subject}</div>
-            <div class="ticket-desc">${t.desc}</div>
+            ${t.subject ? `<div class="ticket-title">${t.subject}</div>` : ''}
+            ${t.desc ? `<div class="ticket-desc">${t.desc}</div>` : ''}
             <div class="ticket-footer">
-              <span>ID: ${displayId} (${t.class})</span>
+              <span>ID: ${displayId}${displayClass}</span>
               <div class="action-btns">
                 ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Fixed</span>'}
                 <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
@@ -441,17 +452,17 @@
       }
 
       myPrivateTickets.forEach(t => {
-        const isResolved = t.status === "Resolved";
+        const isResolved = (t.status || "").toLowerCase() === "resolved";
         feed.innerHTML += `
           <div class="ticket-card private-card">
             <div class="ticket-header">
-              <span class="ticket-id">${t.id} • ${t.category}</span>
+              <span class="ticket-id">${getHeaderTitle(t)}</span>
               <span class="badge badge-private">🔒 Private (Faculty Direct)</span>
             </div>
-            <div class="ticket-title">${t.subject}</div>
-            <div class="ticket-desc">${t.desc}</div>
+            ${t.subject ? `<div class="ticket-title">${t.subject}</div>` : ''}
+            ${t.desc ? `<div class="ticket-desc">${t.desc}</div>` : ''}
             <div class="ticket-footer">
-              <span>Status: <strong style="color:${isResolved ? '#34d399' : '#f87171'}">${t.status}</strong></span>
+              <span>Status: <strong style="color:${isResolved ? '#34d399' : '#f87171'}">${t.status || 'Unresolved'}</strong></span>
               <div class="action-btns">
                 ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : ''}
                 <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
@@ -474,18 +485,20 @@
       }
 
       tickets.forEach(t => {
-        const isResolved = t.status === "Resolved";
+        const isResolved = (t.status || "").toLowerCase() === "resolved";
         const displayId = t.studentId || t.rollNo || "N/A";
+        const displayClass = t.class ? ` (${t.class})` : '';
+
         feed.innerHTML += `
           <div class="ticket-card ${t.isPrivate ? 'private-card' : ''}">
             <div class="ticket-header">
-              <span class="ticket-id">${t.id} • ${t.category} ${t.isPrivate ? '🔒 (Private)' : '🌐 (Public)'}</span>
-              <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status}</span>
+              <span class="ticket-id">${getHeaderTitle(t)} ${t.isPrivate ? '🔒 (Private)' : '🌐 (Public)'}</span>
+              <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status || 'Unresolved'}</span>
             </div>
-            <div class="ticket-title">${t.subject}</div>
-            <div class="ticket-desc">${t.desc}</div>
+            ${t.subject ? `<div class="ticket-title">${t.subject}</div>` : ''}
+            ${t.desc ? `<div class="ticket-desc">${t.desc}</div>` : ''}
             <div class="ticket-footer">
-              <span>Student ID: <strong style="color:#fff;">${displayId}</strong> (${t.class})</span>
+              <span>Student ID: <strong style="color:#fff;">${displayId}</strong>${displayClass}</span>
               <div class="action-btns">
                 ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Resolved</span>'}
                 <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
