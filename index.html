@@ -16,6 +16,7 @@
       --success-green: #10b981;
       --warning-red: #ef4444;
       --purple-private: #a855f7;
+      --admin-gold: #f59e0b;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
     }
@@ -48,13 +49,14 @@
     .school-name h2 { margin: 0; font-size: 16px; font-weight: 800; color: #fff; }
     .school-name p { margin: 2px 0 0 0; font-size: 11px; color: var(--accent-cyan); }
 
-    .nav-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 12px; }
+    .nav-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 12px; flex-wrap: wrap; }
     .tab-btn {
       background: none; border: none; color: var(--text-muted);
       padding: 8px 10px; border-radius: 8px; font-weight: 600; font-size: 11px;
       cursor: pointer; transition: all 0.2s ease;
     }
     .tab-btn.active { background: var(--school-blue); color: #fff; }
+    .tab-btn.admin-tab-btn.active { background: var(--admin-gold); color: #000; font-weight: 800; }
 
     .glass-card {
       background: var(--card-bg);
@@ -152,6 +154,7 @@
         <button class="tab-btn active" onclick="switchTab('submitTab', this)">File Issue</button>
         <button class="tab-btn" onclick="switchTab('boardTab', this)">Public Board</button>
         <button class="tab-btn" onclick="switchTab('privateTab', this)">🔒 Faculty Direct</button>
+        <button class="tab-btn admin-tab-btn" onclick="openAdminPanel(this)">🔑 Admin</button>
       </div>
     </div>
 
@@ -237,17 +240,32 @@
       </div>
     </div>
 
+    <!-- TAB 4: ADMIN CONTROL DASHBOARD -->
+    <div id="adminTab" class="hidden">
+      <div class="glass-card" style="border-color: rgba(245, 158, 11, 0.4);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="section-title" style="color: var(--admin-gold); margin:0;">👑 ADMIN CONTROL PANEL</div>
+          <button style="background:rgba(239, 68, 68, 0.2); border:1px solid #ef4444; color:#f87171; padding:4px 10px; border-radius:6px; font-size:10px; cursor:pointer;" onclick="logoutAdmin()">Logout Admin</button>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted);">Master access: View all public/private grievances and resolve or delete them instantly without authorization prompts.</p>
+        <div id="adminFeed" style="margin-top:20px;">Loading all complaints...</div>
+      </div>
+    </div>
+
   </div>
 
   <script>
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwV7HkFhlY40wDIgn4WbS5SaAkZpsxuOsOlDZ2cD9Q2KErB2RTpobCy_1JxTIHElNWS/exec";
+    const ADMIN_PASSCODE = "admin123"; // 👈 Passcode yahan change kar sakte hain
 
     let tickets = JSON.parse(localStorage.getItem('school_complaints')) || [];
+    let isAdminLoggedIn = false;
 
     function saveData() {
       localStorage.setItem('school_complaints', JSON.stringify(tickets));
       renderBoard();
       renderPrivateBoard();
+      if(isAdminLoggedIn) renderAdminBoard();
     }
 
     // Google Sheets se Fetch Data
@@ -301,10 +319,11 @@
       }
     });
 
-    // Security Verification Check
+    // Verification check for normal users
     function verifyOwnership(ticket) {
-      const inputId = prompt(`Security Check: Complaint (${ticket.id}) ki Student ID enter karein authorization ke liye:`);
+      if (isAdminLoggedIn) return true; // Admin bypasses prompt
       
+      const inputId = prompt(`Security Check: Complaint (${ticket.id}) ki Student ID enter karein:`);
       if (!inputId) return false;
 
       const cleanInput = String(inputId).trim().toLowerCase();
@@ -339,7 +358,7 @@
       }
     }
 
-    // Delete Ticket Function (Instant Removal Fix)
+    // Delete Ticket Function
     function deleteTicket(ticketId) {
       const ticketIndex = tickets.findIndex(t => String(t.id) === String(ticketId));
       if (ticketIndex !== -1) {
@@ -347,11 +366,9 @@
         if (!verifyOwnership(ticket)) return;
 
         if (confirm("Kya aap sach mein is complaint ko delete karna chahte hain?")) {
-          // Instant screen aur LocalStorage se delete
           tickets.splice(ticketIndex, 1);
           saveData();
 
-          // Cloud Sheet Update
           fetch(GOOGLE_SHEET_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
@@ -400,7 +417,7 @@
       });
     }
 
-    // UI Render Function - PRIVATE BOARD (Faculty Direct)
+    // UI Render Function - PRIVATE BOARD
     function renderPrivateBoard() {
       const feed = document.getElementById('privateFeed');
       if (!feed) return;
@@ -442,17 +459,77 @@
       });
     }
 
+    // UI Render Function - ADMIN BOARD
+    function renderAdminBoard() {
+      const feed = document.getElementById('adminFeed');
+      if (!feed) return;
+      feed.innerHTML = "";
+
+      if (tickets.length === 0) {
+        feed.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>No complaints found in the database.</p>";
+        return;
+      }
+
+      tickets.forEach(t => {
+        const isResolved = t.status === "Resolved";
+        const displayId = t.studentId || t.rollNo || "N/A";
+        feed.innerHTML += `
+          <div class="ticket-card ${t.isPrivate ? 'private-card' : ''}">
+            <div class="ticket-header">
+              <span class="ticket-id">${t.id} • ${t.category} ${t.isPrivate ? '🔒 (Private)' : '🌐 (Public)'}</span>
+              <span class="badge ${isResolved ? 'badge-resolved' : 'badge-unresolved'}">${t.status}</span>
+            </div>
+            <div class="ticket-title">${t.subject}</div>
+            <div class="ticket-desc">${t.desc}</div>
+            <div class="ticket-footer">
+              <span>Student ID: <strong style="color:#fff;">${displayId}</strong> (${t.class})</span>
+              <div class="action-btns">
+                ${!isResolved ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">✓ Resolve</button>` : '<span style="color:#34d399; font-weight:700;">✓ Resolved</span>'}
+                <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Admin Access Management
+    function openAdminPanel(btn) {
+      if (!isAdminLoggedIn) {
+        const pass = prompt("🔑 Admin Passcode Enter Karein:");
+        if (pass === ADMIN_PASSCODE) {
+          isAdminLoggedIn = true;
+          alert("✅ Admin Access Granted!");
+          switchTab('adminTab', btn);
+          renderAdminBoard();
+        } else if (pass !== null) {
+          alert("❌ Galat Passcode! Access Denied.");
+        }
+      } else {
+        switchTab('adminTab', btn);
+        renderAdminBoard();
+      }
+    }
+
+    function logoutAdmin() {
+      isAdminLoggedIn = false;
+      alert("Admin Logged Out.");
+      switchTab('boardTab', document.querySelectorAll('.tab-btn')[1]);
+    }
+
     function switchTab(tabId, btn) {
       document.getElementById('submitTab').classList.add('hidden');
       document.getElementById('boardTab').classList.add('hidden');
       document.getElementById('privateTab').classList.add('hidden');
+      document.getElementById('adminTab').classList.add('hidden');
+      
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
       document.getElementById(tabId).classList.remove('hidden');
       btn.classList.add('active');
     }
 
-    // Initial Load & Auto Refresh
+    // Initial Load & Sync
     renderBoard();
     fetchComplaintsFromSheet();
     setInterval(fetchComplaintsFromSheet, 5000);
